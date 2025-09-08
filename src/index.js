@@ -1,34 +1,25 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const { pool } = require('./config/database');
+import App from "./app.js";
+import { connectDB, sequelize } from "./config/database.js";
+import './models/index.js'; 
 
-const app = express();
-const port = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
-app.use(morgan('dev'));
+async function main() {
+    try {
+        await connectDB();
 
-app.get('/health', async (req, res) => {
-  try {
-    await pool.query('SELECT 1');
-    res.json({ ok: true, db: 'up' });
-  } catch (error) {
-    res.status(500).json({ ok: false, db: 'down' });
-  }
-});
+        const PORT = process.env.PORT || 3000;
 
-app.use((req, res) => {
-  res.status(404).json({ message: 'Ruta no encontrada' });
-});
+        //sincroniza los modelos con la base de datos
+        await sequelize.sync({ force: false });
+        console.log('📦 Modelos sincronizados con la base de datos');
 
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).json({ message: 'Error interno del servidor' });
-});
+        App.listen(PORT, () => {
+            console.log(`✅ Servidor escuchando en http://localhost:${PORT}`);
+        });
 
-app.listen(port, () => {
-  console.log(`Servidor escuchando en el puerto ${port}`);
-});
+    } catch (error) {
+        console.error("❌ Error al conectarse a la base de datos", error);
+    }
+}
+
+main();

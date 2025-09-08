@@ -1,14 +1,19 @@
-const { Pool } = require('pg');
+import { Sequelize } from 'sequelize';
+import dotenv from 'dotenv';
 
-const databaseUrl = process.env.DATABASE_URL;
+dotenv.config();
 
-if (!databaseUrl) {
-	throw new Error('DATABASE_URL no está definida en las variables de entorno');
-}
-
-const pool = new Pool({
-  connectionString: databaseUrl,
-  ssl: { rejectUnauthorized: false }
+export const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  logging: false,
 });
 
-module.exports = { pool };
+export const connectDB = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Conectado correctamente a la base de datos');
+  } catch (error) {
+    console.error('Error al conectarse a la base de datos:', error);
+    process.exit(1);
+  }
+};
