@@ -1,6 +1,6 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const bcrypt = require('bcryptjs');
-const { sequelize } = require('../config/database');
+import { Sequelize, DataTypes, Model } from 'sequelize';
+import bcrypt from 'bcryptjs';
+import { sequelize } from '../config/database.js';
 
 class User extends Model {
   async validatePassword(plainPassword) {
@@ -72,4 +72,4 @@ User.init(
   }
 );
 
-module.exports = { sequelize, User };
+export { User };

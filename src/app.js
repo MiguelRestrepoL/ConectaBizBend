@@ -10,6 +10,10 @@ const App = express();
 App.use(morgan('dev'));
 App.use(express.json());
 
+// Rutas
+import authRoutes from './routes/auth.routes.js';
+App.use('/api', authRoutes);
+
 // Ruta de prueba
 App.get('/', (req, res) => {
   res.json({ message: '🚀 API funcionando correctamente' });
