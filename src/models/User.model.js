@@ -15,7 +15,6 @@ User.init(
       type: DataTypes.STRING(50),
       allowNull: false,
       unique: true,
-      field: 'user',
       validate: {
         notEmpty: true,
         len: [3, 50]

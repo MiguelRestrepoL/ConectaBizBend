@@ -1,22 +1,29 @@
 import express from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import cors from "cors";
 
 dotenv.config();
 
-const App = express();
+const app = express();
 
 // Middlewares
-App.use(morgan('dev'));
-App.use(express.json());
+app.use(cors({
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+app.use(morgan('dev'));
+app.use(express.json());
 
 // Rutas
 import authRoutes from './routes/auth.routes.js';
-App.use('/api', authRoutes);
+app.use('/api', authRoutes);
 
 // Ruta de prueba
-App.get('/', (req, res) => {
+app.get('/', (req, res) => {
   res.json({ message: '🚀 API funcionando correctamente' });
 });
 
-export default App;
+export default app;
+
