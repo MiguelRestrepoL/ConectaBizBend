@@ -1,6 +1,6 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const bcrypt = require('bcryptjs');
-const { sequelize } = require('../config/database');
+import { Sequelize, DataTypes, Model } from 'sequelize';
+import bcrypt from 'bcryptjs';
+import { sequelize } from '../config/database.js';
 
 class User extends Model {
   async validatePassword(plainPassword) {
@@ -15,7 +15,6 @@ User.init(
       type: DataTypes.STRING(50),
       allowNull: false,
       unique: true,
-      field: 'user',
       validate: {
         notEmpty: true,
         len: [3, 50]
@@ -72,4 +71,13 @@ User.init(
   }
 );
 
-module.exports = { sequelize, User };
+// Definir las asociaciones después de importar todos los modelos
+User.associate = (models) => {
+  // Un usuario puede tener muchos clientes
+  User.hasMany(models.Client, {
+    foreignKey: 'user_id',
+    as: 'clients'
+  });
+};
+
+export { User };
