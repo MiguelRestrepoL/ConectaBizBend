@@ -71,4 +71,13 @@ User.init(
   }
 );
 
+// Definir las asociaciones después de importar todos los modelos
+User.associate = (models) => {
+  // Un usuario puede tener muchos clientes
+  User.hasMany(models.Client, {
+    foreignKey: 'user_id',
+    as: 'clients'
+  });
+};
+
 export { User };

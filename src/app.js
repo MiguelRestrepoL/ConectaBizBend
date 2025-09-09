@@ -3,6 +3,10 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import cors from "cors";
 
+// Rutas
+import authRoutes from './routes/auth.routes.js';
+import clientRoutes from './routes/client.routes.js';
+
 dotenv.config();
 
 const app = express();
@@ -16,9 +20,10 @@ app.use(cors({
 app.use(morgan('dev'));
 app.use(express.json());
 
-// Rutas
-import authRoutes from './routes/auth.routes.js';
+
+
 app.use('/api', authRoutes);
+app.use('/api/clients', clientRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {
