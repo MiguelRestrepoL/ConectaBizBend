@@ -13,11 +13,23 @@ dotenv.config();
 const app = express();
 
 // Middlewares
-app.use(cors({
-  origin: "http://localhost:3000",
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
-}));
+};
+
+// En producción, permitir múltiples orígenes
+if (process.env.NODE_ENV === 'production') {
+  corsOptions.origin = [
+    process.env.FRONTEND_URL,
+    'https://tu-dominio-frontend.com',
+    'https://www.tu-dominio-frontend.com'
+  ];
+}
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json());
 
