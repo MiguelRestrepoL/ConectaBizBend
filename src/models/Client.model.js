@@ -175,6 +175,12 @@ Client.associate = (models) => {
     foreignKey: 'user_id',
     as: 'user'
   });
+  
+  // Un cliente puede tener muchos pedidos
+  Client.hasMany(models.Pedido, {
+    foreignKey: 'cliente_id',
+    as: 'pedidos'
+  });
 };
 
 export { Client };
