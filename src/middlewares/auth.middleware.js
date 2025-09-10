@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { findById } from '../repository/user.repository.js';
+import { verifyTokenNotBlacklisted } from '../services/auth.service.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_change_me';
 
@@ -11,6 +12,9 @@ export const authenticateToken = async (req, res, next) => {
     if (!token) {
       return res.status(401).json({ error: 'Token de acceso requerido' });
     }
+
+    // Verificar que el token no esté en la blacklist
+    await verifyTokenNotBlacklisted(token);
 
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await findById(decoded.sub);
