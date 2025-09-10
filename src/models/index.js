@@ -9,15 +9,15 @@ import { User } from './User.model.js';
 import { Client } from './Client.model.js';
 import { Pedido } from './Pedido.model.js';
 import { BlacklistedToken } from './BlacklistedToken.model.js';
-n
+
 
 // Crear objeto con todos los modelos
 const models = {
   User,
   Client,
-
   Pedido,
   BlacklistedToken
+};
 
 
 // Establecer las asociaciones
