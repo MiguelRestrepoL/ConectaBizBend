@@ -1,18 +1,24 @@
 import './User.model.js'
 import './item.model.js'
 import './Client.model.js'
+import './Pedido.model.js'
+import './BlacklistedToken.model.js'
 
 // Importar los modelos
 import { User } from './User.model.js';
 import { Client } from './Client.model.js';
-import { Item } from './item.model.js';
+import { Pedido } from './Pedido.model.js';
+import { BlacklistedToken } from './BlacklistedToken.model.js';
+n
 
 // Crear objeto con todos los modelos
 const models = {
   User,
   Client,
-  Item
-};
+
+  Pedido,
+  BlacklistedToken
+
 
 // Establecer las asociaciones
 Object.keys(models).forEach(modelName => {
@@ -21,4 +27,6 @@ Object.keys(models).forEach(modelName => {
   }
 });
 
-export { User, Client, Item };
+
+export { User, Client, Pedido, BlacklistedToken };
+
