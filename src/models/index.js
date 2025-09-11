@@ -10,6 +10,7 @@ import { Client } from './Client.model.js';
 import { Pedido } from './Pedido.model.js';
 import { BlacklistedToken } from './BlacklistedToken.model.js';
 
+
 // Crear objeto con todos los modelos
 const models = {
   User,
@@ -17,6 +18,7 @@ const models = {
   Pedido,
   BlacklistedToken
 };
+
 
 // Establecer las asociaciones
 Object.keys(models).forEach(modelName => {
