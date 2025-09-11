@@ -4,6 +4,10 @@ import {
   findByEmailOrUsername,
   findByEmailWithPassword,
   acceptTermsByUserId,
+  updateUserProfile,
+  findByBuyerEmail,
+  changePassword,
+  getUserById,
 } from '../repository/user.repository.js';
 import { addTokenToBlacklist, isTokenBlacklisted } from '../repository/blacklistedToken.repository.js';
 
@@ -78,6 +82,66 @@ export const verifyTokenNotBlacklisted = async (token) => {
     throw error;
   }
   return true;
+};
+
+export const updateProfile = async (userId, { buyer_email, country, birth_date }) => {
+  // Validar que el buyer_email no esté en uso por otro usuario
+  if (buyer_email) {
+    const existingUser = await findByBuyerEmail(buyer_email);
+    if (existingUser && existingUser.id !== userId) {
+      const error = new Error('El email para compradores ya está en uso');
+      error.status = 409;
+      throw error;
+    }
+  }
+
+  const user = await updateUserProfile(userId, { buyer_email, country, birth_date });
+  if (!user) {
+    const error = new Error('Usuario no encontrado');
+    error.status = 404;
+    throw error;
+  }
+  return user;
+};
+
+export const changeUserPassword = async (userId, { currentPassword, newPassword }) => {
+  // Validaciones básicas
+  if (!currentPassword || !newPassword) {
+    const error = new Error('La contraseña actual y la nueva contraseña son requeridas');
+    error.status = 400;
+    throw error;
+  }
+
+  if (currentPassword === newPassword) {
+    const error = new Error('La nueva contraseña debe ser diferente a la actual');
+    error.status = 400;
+    throw error;
+  }
+
+  if (newPassword.length < 6) {
+    const error = new Error('La nueva contraseña debe tener al menos 6 caracteres');
+    error.status = 400;
+    throw error;
+  }
+
+  const user = await changePassword(userId, currentPassword, newPassword);
+  if (!user) {
+    const error = new Error('Usuario no encontrado');
+    error.status = 404;
+    throw error;
+  }
+  
+  return { message: 'Contraseña cambiada exitosamente' };
+};
+
+export const getUserProfile = async (userId) => {
+  const user = await getUserById(userId);
+  if (!user) {
+    const error = new Error('Usuario no encontrado');
+    error.status = 404;
+    throw error;
+  }
+  return user;
 };
 
 

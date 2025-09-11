@@ -31,6 +31,28 @@ User.init(
         this.setDataValue('email', value ? value.toLowerCase().trim() : value);
       }
     },
+    buyer_email: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      validate: {
+        isEmail: true
+      },
+      set(value) {
+        this.setDataValue('buyer_email', value ? value.toLowerCase().trim() : value);
+      }
+    },
+    country: {
+      type: DataTypes.STRING(100),
+      allowNull: true
+    },
+    birth_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      validate: {
+        isDate: true,
+        isBefore: new Date().toISOString().split('T')[0] // No puede ser fecha futura
+      }
+    },
     password: {
       type: DataTypes.STRING(255),
       allowNull: false

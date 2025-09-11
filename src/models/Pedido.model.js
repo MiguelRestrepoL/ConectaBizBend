@@ -1,5 +1,5 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const { sequelize } = require('../config/database');
+import { Sequelize, DataTypes, Model } from 'sequelize';
+import { sequelize } from '../config/database.js';
 
 class Pedido extends Model {}
 
@@ -101,4 +101,4 @@ Pedido.associate = (models) => {
   });
 };
 
-module.exports = { Pedido };
+export { Pedido };

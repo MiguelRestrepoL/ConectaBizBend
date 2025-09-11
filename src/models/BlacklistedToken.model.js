@@ -1,5 +1,5 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const { sequelize } = require('../config/database');
+import { Sequelize, DataTypes, Model } from 'sequelize';
+import { sequelize } from '../config/database.js';
 
 class BlacklistedToken extends Model {}
 
@@ -65,4 +65,4 @@ BlacklistedToken.associate = (models) => {
   });
 };
 
-module.exports = { BlacklistedToken };
+export { BlacklistedToken };
