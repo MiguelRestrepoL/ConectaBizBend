@@ -3,6 +3,7 @@ import {
   createClient,
   getClientById,
   getClients,
+  getClientsByType,
   updateClient,
   deleteClient,
   getClientStats
@@ -20,6 +21,9 @@ router.post('/', createClient);
 
 // GET /api/clients - Obtener todos los clientes del usuario autenticado
 router.get('/', getClients);
+
+// GET /api/clients/type/:tipo - Obtener clientes por tipo (persona_natural o persona_juridica)
+router.get('/type/:tipo', getClientsByType);
 
 // GET /api/clients/stats - Obtener estadísticas de clientes
 router.get('/stats', getClientStats);

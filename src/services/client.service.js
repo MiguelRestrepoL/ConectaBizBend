@@ -5,7 +5,9 @@ import {
   updateClient,
   deleteClient,
   findClientByEmailAndUserId,
-  findClientByPhoneAndUserId
+  findClientByPhoneAndUserId,
+  findClientByNitAndUserId,
+  findClientsByType
 } from '../repository/client.repository.js';
 
 export const createClientService = async (clientData, userId) => {
@@ -23,6 +25,16 @@ export const createClientService = async (clientData, userId) => {
     const error = new Error('Ya existe un cliente con este número de teléfono');
     error.status = 409;
     throw error;
+  }
+
+  // Si es persona jurídica, validar que el NIT no esté duplicado
+  if (clientData.tipo_cliente === 'persona_juridica' && clientData.nit) {
+    const existingNit = await findClientByNitAndUserId(clientData.nit, userId);
+    if (existingNit) {
+      const error = new Error('Ya existe un cliente con este NIT');
+      error.status = 409;
+      throw error;
+    }
   }
 
   // Agregar el user_id a los datos del cliente
@@ -56,6 +68,11 @@ export const getClientByIdService = async (id, userId) => {
 
 export const getClientsByUserIdService = async (userId, options = {}) => {
   const result = await findClientsByUserId(userId, options);
+  return result;
+};
+
+export const getClientsByTypeService = async (userId, tipoCliente, options = {}) => {
+  const result = await findClientsByType(userId, tipoCliente, options);
   return result;
 };
 
@@ -95,6 +112,16 @@ export const updateClientService = async (id, clientData, userId) => {
     }
   }
 
+  // Si se está actualizando el NIT, verificar que no esté duplicado
+  if (clientData.nit && clientData.nit !== client.nit) {
+    const existingNit = await findClientByNitAndUserId(clientData.nit, userId);
+    if (existingNit && existingNit.id !== id) {
+      const error = new Error('Ya existe un cliente con este NIT');
+      error.status = 409;
+      throw error;
+    }
+  }
+
   const updatedClient = await updateClient(id, clientData);
   return updatedClient;
 };
@@ -122,15 +149,12 @@ export const deleteClientService = async (id, userId) => {
 export const validateClientData = (clientData) => {
   const errors = [];
 
-  // Validaciones obligatorias
-  if (!clientData.nombre || clientData.nombre.trim() === '') {
-    errors.push('El nombre es obligatorio');
+  // Validar tipo de cliente
+  if (!clientData.tipo_cliente || !['persona_natural', 'persona_juridica'].includes(clientData.tipo_cliente)) {
+    errors.push('El tipo de cliente debe ser "persona_natural" o "persona_juridica"');
   }
 
-  if (!clientData.apellido || clientData.apellido.trim() === '') {
-    errors.push('El apellido es obligatorio');
-  }
-
+  // Validaciones comunes
   if (!clientData.correo_electronico || clientData.correo_electronico.trim() === '') {
     errors.push('El correo electrónico es obligatorio');
   } else {
@@ -143,6 +167,31 @@ export const validateClientData = (clientData) => {
 
   if (!clientData.numero_telefono || clientData.numero_telefono.trim() === '') {
     errors.push('El número de teléfono es obligatorio');
+  }
+
+  // Validaciones específicas por tipo de cliente
+  if (clientData.tipo_cliente === 'persona_natural') {
+    if (!clientData.nombre || clientData.nombre.trim() === '') {
+      errors.push('El nombre es obligatorio para persona natural');
+    }
+    if (!clientData.apellido || clientData.apellido.trim() === '') {
+      errors.push('El apellido es obligatorio para persona natural');
+    }
+  } else if (clientData.tipo_cliente === 'persona_juridica') {
+    if (!clientData.razon_social || clientData.razon_social.trim() === '') {
+      errors.push('La razón social es obligatoria para persona jurídica');
+    }
+    if (!clientData.nit || clientData.nit.trim() === '') {
+      errors.push('El NIT es obligatorio para persona jurídica');
+    }
+    if (!clientData.representante_legal || clientData.representante_legal.trim() === '') {
+      errors.push('El representante legal es obligatorio para persona jurídica');
+    }
+    
+    // Validar tipo de empresa si se proporciona
+    if (clientData.tipo_empresa && !['SAS', 'LTDA', 'SA', 'SRL', 'EIRL', 'SOCIEDAD_COLECTIVA', 'SOCIEDAD_EN_COMANDITA', 'OTRO'].includes(clientData.tipo_empresa)) {
+      errors.push('El tipo de empresa no es válido');
+    }
   }
 
   // Validar enum de recaudar_impuestos

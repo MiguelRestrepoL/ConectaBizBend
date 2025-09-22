@@ -22,12 +22,15 @@ export const findClientsByUserId = async (userId, options = {}) => {
     user_id: userId
   };
 
-  // Búsqueda por nombre, apellido o email
+  // Búsqueda por nombre, apellido, email, razón social o NIT
   if (search) {
     whereClause[Op.or] = [
       { nombre: { [Op.iLike]: `%${search}%` } },
       { apellido: { [Op.iLike]: `%${search}%` } },
-      { correo_electronico: { [Op.iLike]: `%${search}%` } }
+      { correo_electronico: { [Op.iLike]: `%${search}%` } },
+      { razon_social: { [Op.iLike]: `%${search}%` } },
+      { nit: { [Op.iLike]: `%${search}%` } },
+      { representante_legal: { [Op.iLike]: `%${search}%` } }
     ];
   }
 
@@ -90,4 +93,63 @@ export const findClientByPhoneAndUserId = async (phoneNumber, userId) => {
       user_id: userId
     } 
   });
+};
+
+export const findClientByNit = async (nit) => {
+  return Client.findOne({ where: { nit: nit } });
+};
+
+export const findClientByNitAndUserId = async (nit, userId) => {
+  return Client.findOne({ 
+    where: { 
+      nit: nit,
+      user_id: userId
+    } 
+  });
+};
+
+export const findClientsByType = async (userId, tipoCliente, options = {}) => {
+  const { page = 1, limit = 10, search = '' } = options;
+  const offset = (page - 1) * limit;
+
+  const whereClause = {
+    user_id: userId,
+    tipo_cliente: tipoCliente
+  };
+
+  // Búsqueda por campos específicos según el tipo
+  if (search) {
+    if (tipoCliente === 'persona_natural') {
+      whereClause[Op.or] = [
+        { nombre: { [Op.iLike]: `%${search}%` } },
+        { apellido: { [Op.iLike]: `%${search}%` } },
+        { correo_electronico: { [Op.iLike]: `%${search}%` } }
+      ];
+    } else if (tipoCliente === 'persona_juridica') {
+      whereClause[Op.or] = [
+        { razon_social: { [Op.iLike]: `%${search}%` } },
+        { nit: { [Op.iLike]: `%${search}%` } },
+        { representante_legal: { [Op.iLike]: `%${search}%` } },
+        { correo_electronico: { [Op.iLike]: `%${search}%` } }
+      ];
+    }
+  }
+
+  const { count, rows } = await Client.findAndCountAll({
+    where: whereClause,
+    include: [{
+      association: 'user',
+      attributes: ['id', 'username', 'email']
+    }],
+    limit: parseInt(limit),
+    offset: parseInt(offset),
+    order: [['created_at', 'DESC']]
+  });
+
+  return {
+    clients: rows,
+    total: count,
+    page: parseInt(page),
+    totalPages: Math.ceil(count / limit)
+  };
 };
