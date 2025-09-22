@@ -2,6 +2,7 @@ import {
   createClientService,
   getClientByIdService,
   getClientsByUserIdService,
+  getClientsByTypeService,
   updateClientService,
   deleteClientService,
   validateClientData
@@ -70,6 +71,35 @@ export const getClients = async (req, res) => {
   }
 };
 
+export const getClientsByType = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { tipo } = req.params;
+    const { page = 1, limit = 10, search = '' } = req.query;
+
+    // Validar tipo de cliente
+    if (!['persona_natural', 'persona_juridica'].includes(tipo)) {
+      return res.status(400).json({ 
+        error: 'Tipo de cliente inválido. Debe ser "persona_natural" o "persona_juridica"' 
+      });
+    }
+
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      search: search.trim()
+    };
+
+    const result = await getClientsByTypeService(userId, tipo, options);
+    return res.json(result);
+  } catch (error) {
+    const status = error.status || 500;
+    return res.status(status).json({ 
+      error: error.message || 'Error interno del servidor' 
+    });
+  }
+};
+
 export const updateClient = async (req, res) => {
   try {
     const { id } = req.params;
@@ -125,9 +155,23 @@ export const getClientStats = async (req, res) => {
     // Obtener estadísticas básicas de clientes
     const result = await getClientsByUserIdService(userId, { page: 1, limit: 1 });
     
+    // Obtener estadísticas por tipo
+    const naturalResult = await getClientsByTypeService(userId, 'persona_natural', { page: 1, limit: 1 });
+    const juridicaResult = await getClientsByTypeService(userId, 'persona_juridica', { page: 1, limit: 1 });
+    
     const stats = {
       totalClients: result.total,
-      totalPages: result.totalPages
+      totalPages: result.totalPages,
+      byType: {
+        persona_natural: {
+          total: naturalResult.total,
+          totalPages: naturalResult.totalPages
+        },
+        persona_juridica: {
+          total: juridicaResult.total,
+          totalPages: juridicaResult.totalPages
+        }
+      }
     };
 
     return res.json({ stats });
