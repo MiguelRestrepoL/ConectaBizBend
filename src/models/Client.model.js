@@ -5,21 +5,29 @@ class Client extends Model {}
 
 Client.init(
   {
-    // Información personal
+    // Tipo de cliente
+    tipo_cliente: {
+      type: DataTypes.ENUM('persona_natural', 'persona_juridica'),
+      allowNull: false,
+      defaultValue: 'persona_natural',
+      validate: {
+        isIn: [['persona_natural', 'persona_juridica']]
+      }
+    },
+    
+    // Información personal (para persona natural)
     nombre: {
       type: DataTypes.STRING(100),
-      allowNull: false,
+      allowNull: true,
       validate: {
-        notEmpty: true,
-        len: [1, 100]
+        len: [0, 100] // Permitir string vacío pero con longitud máxima
       }
     },
     apellido: {
       type: DataTypes.STRING(100),  
-      allowNull: false,
+      allowNull: true,
       validate: {
-        notEmpty: true,
-        len: [1, 100]
+        len: [0, 100] // Permitir string vacío pero con longitud máxima
       }
     },
     segundo_nombre: {
@@ -126,6 +134,96 @@ Client.init(
       }
     },
     
+    // Información para persona jurídica
+    razon_social: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      validate: {
+        len: [0, 255] // Permitir string vacío pero con longitud máxima
+      }
+    },
+    nit: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      unique: true,
+      validate: {
+        len: [0, 20] // Permitir string vacío pero con longitud máxima
+      }
+    },
+    digito_verificacion: {
+      type: DataTypes.STRING(1),
+      allowNull: true,
+      validate: {
+        len: [0, 1]
+      }
+    },
+    representante_legal: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      validate: {
+        len: [0, 255] // Permitir string vacío pero con longitud máxima
+      }
+    },
+    cedula_representante: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      validate: {
+        len: [0, 20] // Permitir string vacío pero con longitud máxima
+      }
+    },
+    tipo_empresa: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      validate: {
+        isIn: {
+          args: [['SAS', 'LTDA', 'SA', 'SRL', 'EIRL', 'SOCIEDAD_COLECTIVA', 'SOCIEDAD_EN_COMANDITA', 'OTRO', '']],
+          msg: 'Tipo de empresa no válido'
+        }
+      }
+    },
+    actividad_economica: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+      validate: {
+        len: [0, 500] // Permitir string vacío pero con longitud máxima
+      }
+    },
+    codigo_ciiu: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
+      validate: {
+        len: [0, 10] // Permitir string vacío pero con longitud máxima
+      }
+    },
+    fecha_constitucion: {
+      type: DataTypes.STRING(10),
+      allowNull: true,
+      validate: {
+        len: [0, 10], // Permitir string vacío pero con longitud máxima
+        isValidDate(value) {
+          if (value && value !== '' && isNaN(new Date(value).getTime())) {
+            throw new Error('La fecha de constitución debe ser una fecha válida (formato: YYYY-MM-DD)');
+          }
+        }
+      }
+    },
+    capital_social: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      validate: {
+        len: [0, 20], // Permitir string vacío pero con longitud máxima
+        isValidNumber(value) {
+          if (value && value !== '' && isNaN(parseFloat(value))) {
+            throw new Error('El capital social debe ser un número válido');
+          }
+          if (value && value !== '' && parseFloat(value) < 0) {
+            throw new Error('El capital social no puede ser negativo');
+          }
+        }
+      }
+    },
+  
+    
     // Relación con User
     user_id: {
       type: DataTypes.INTEGER,
@@ -163,10 +261,41 @@ Client.init(
       },
       {
         fields: ['correo_electronico']
+      },
+      {
+        fields: ['nit'],
+        unique: true
+      },
+      {
+        fields: ['tipo_cliente']
       }
     ]
   }
 );
+
+// Validaciones personalizadas
+Client.addHook('beforeValidate', (client) => {
+  if (client.tipo_cliente === 'persona_natural') {
+    // Para persona natural, nombre y apellido son requeridos
+    if (!client.nombre || client.nombre.trim() === '') {
+      throw new Error('El nombre es requerido para persona natural');
+    }
+    if (!client.apellido || client.apellido.trim() === '') {
+      throw new Error('El apellido es requerido para persona natural');
+    }
+  } else if (client.tipo_cliente === 'persona_juridica') {
+    // Para persona jurídica, razón social, NIT y representante legal son requeridos
+    if (!client.razon_social || client.razon_social.trim() === '') {
+      throw new Error('La razón social es requerida para persona jurídica');
+    }
+    if (!client.nit || client.nit.trim() === '') {
+      throw new Error('El NIT es requerido para persona jurídica');
+    }
+    if (!client.representante_legal || client.representante_legal.trim() === '') {
+      throw new Error('El representante legal es requerido para persona jurídica');
+    }
+  }
+});
 
 // Definir las asociaciones después de importar todos los modelos
 Client.associate = (models) => {
