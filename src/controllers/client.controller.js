@@ -53,12 +53,18 @@ export const getClientById = async (req, res) => {
 export const getClients = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { page = 1, limit = 10, search = '' } = req.query;
+    const { page = 1, limit = 10, search = '', state } = req.query;
+
+    const parsedState =
+      state === 'true' ? true :
+      state === 'false' ? false :
+      null;
 
     const options = {
       page: parseInt(page),
       limit: parseInt(limit),
-      search: search.trim()
+      search: search.trim(),
+      parsedState
     };
 
     const result = await getClientsByUserIdService(userId, options);
