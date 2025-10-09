@@ -65,7 +65,7 @@ export const findClientsByUserId = async (userId, options = {}) => {
     page = 1, 
     limit = 10, 
     search = '', 
-    includeInactive = false // 👈 Nuevo parámetro
+    includeInactive // 👈 Nuevo parámetro
   } = options;
 
   const offset = (page - 1) * limit;
@@ -132,6 +132,14 @@ export const updateClient = async (id, clientData) => {
   return findClientById(client.id);
 };
 
+export const updateClientState = async (id, state) => {
+  const client = await Client.findByPk(id);
+  if (!client) return null;
+  client.state = state;
+  await client.save();
+  return client;
+};
+
 /* ============================================================
    🔴 ELIMINAR CLIENTE
    ============================================================ */
@@ -139,10 +147,12 @@ export const deleteClient = async (id) => {
   const client = await Client.findByPk(id);
   if (!client) return null;
 
-  client.state = false;
+  await updateClientState(id, false);
   await client.save()
   return client; // Retorna el cliente actualizado
 }
+
+
 
 
 

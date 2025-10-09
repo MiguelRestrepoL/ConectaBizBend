@@ -7,7 +7,8 @@ import {
   findClientsByType,
   findClientByEmail,
   findClientByPhone,
-  findClientByNit
+  findClientByNit,
+  updateClientState
 } from '../repository/client.repository.js';
 
 export const createClientService = async (clientData, userId) => {
@@ -85,6 +86,8 @@ export const updateClientService = async (id, clientData, userId) => {
     throw error;
   }
 
+
+
   // Verificar que el cliente pertenece al usuario
   if (client.user_id !== userId) {
     const error = new Error('No tienes permisos para modificar este cliente');
@@ -145,6 +148,17 @@ export const deleteClientService = async (id, userId) => {
   const deletedClient = await deleteClient(id);
   return deletedClient;
 };
+
+export const updateClientStateService = async (id, state) => {
+  const client = await updateClientState(id, state);
+  if (!client) {
+    const error = new Error('Cliente no encontrado');
+    error.status = 404;
+    throw error;
+  }
+  return client;
+};
+
 
 export const validateClientData = (clientData) => {
   const errors = [];

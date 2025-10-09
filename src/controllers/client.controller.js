@@ -5,7 +5,8 @@ import {
   getClientsByTypeService,
   updateClientService,
   deleteClientService,
-  validateClientData
+  validateClientData,
+  updateClientStateService
 } from '../services/client.service.js';
 
 export const createClient = async (req, res) => {
@@ -53,18 +54,13 @@ export const getClientById = async (req, res) => {
 export const getClients = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { page = 1, limit = 10, search = '', state } = req.query;
-
-    const parsedState =
-      state === 'true' ? true :
-      state === 'false' ? false :
-      null;
+    const { page = 1, limit = 10, search = '', includeInactive } = req.query;
 
     const options = {
       page: parseInt(page),
       limit: parseInt(limit),
       search: search.trim(),
-      parsedState
+      includeInactive: includeInactive === 'true' // 👈 Convertir string a boolean
     };
 
     const result = await getClientsByUserIdService(userId, options);
@@ -144,6 +140,25 @@ export const deleteClient = async (req, res) => {
     const client = await deleteClientService(id, userId);
     return res.json({ 
       message: 'Cliente eliminado exitosamente',
+      client 
+    });
+  } catch (error) {
+    const status = error.status || 500;
+    return res.status(status).json({ 
+      error: error.message || 'Error interno del servidor' 
+    });
+  }
+};
+
+export const updateClientState = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { state } = req.body;
+    const userId = req.user.id;
+
+    const client = await updateClientStateService(id, state, userId);
+    return res.json({ 
+      message: 'Estado del cliente actualizado exitosamente',
       client 
     });
   } catch (error) {
