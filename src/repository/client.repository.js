@@ -1,45 +1,101 @@
 import { Op } from 'sequelize';
 import { Client } from '../models/Client.model.js';
+import { NaturalClient } from '../models/NaturalClient.model.js';
+import { JuridicalClient } from '../models/JuridicalClient.js';
+import { User } from '../models/User.model.js';
 
+/* ============================================================
+   🟢 CREAR CLIENTE
+   ============================================================ */
 export const createClient = async (clientData) => {
-  return Client.create(clientData);
+  const { tipo_cliente, ...rest } = clientData;
+
+  // 1️⃣ Crear el cliente base con todos los campos comunes
+  const client = await Client.create({
+    tipo_cliente,
+    user_id: rest.user_id,
+    correo_electronico: rest.correo_electronico,
+    numero_telefono: rest.numero_telefono,
+    codigo_pais_telefono: rest.codigo_pais_telefono,
+    idioma: rest.idioma,
+    recibe_emails_marketing: rest.recibe_emails_marketing,
+    recibe_sms_marketing: rest.recibe_sms_marketing,
+    direccion: rest.direccion,
+    ciudad: rest.ciudad,
+    pais_residencia: rest.pais_residencia,
+    departamento_estado: rest.departamento_estado,
+    codigo_postal: rest.codigo_postal,
+    apartamento_local: rest.apartamento_local,
+    telefono_residencia: rest.telefono_residencia,
+    codigo_pais_residencia: rest.codigo_pais_residencia,
+    recaudar_impuestos: rest.recaudar_impuestos,
+    notas: rest.notas,
+    etiquetas: rest.etiquetas
+  });
+
+  // 2️⃣ Crear el registro específico (natural o jurídica)
+  if (tipo_cliente === 'persona_natural') {
+    await NaturalClient.create({ ...rest, client_id: client.id });
+  } else if (tipo_cliente === 'persona_juridica') {
+    await JuridicalClient.create({ ...rest, client_id: client.id });
+  }
+
+  // 3️⃣ Retornar con includes
+  return findClientById(client.id);
 };
 
+/* ============================================================
+   🔵 OBTENER CLIENTE POR ID
+   ============================================================ */
 export const findClientById = async (id) => {
   return Client.findByPk(id, {
-    include: [{
-      association: 'user',
-      attributes: ['id', 'username', 'email']
-    }]
+    include: [
+      { model: User, as: 'user', attributes: ['id', 'username', 'email'] },
+      { model: NaturalClient, as: 'persona_natural' },
+      { model: JuridicalClient, as: 'persona_juridica' }
+    ]
   });
 };
 
+/* ============================================================
+   🟣 LISTAR CLIENTES DE UN USUARIO (con paginación y búsqueda)
+   ============================================================ */
 export const findClientsByUserId = async (userId, options = {}) => {
-  const { page = 1, limit = 10, search = '' } = options;
+  const { 
+    page = 1, 
+    limit = 10, 
+    search = '', 
+    includeInactive // 👈 Nuevo parámetro
+  } = options;
+
   const offset = (page - 1) * limit;
 
-  const whereClause = {
-    user_id: userId
-  };
+  // Base: siempre filtra por usuario
+  const whereClause = { user_id: userId };
 
-  // Búsqueda por nombre, apellido, email, razón social o NIT
+  // 👇 Si no se quieren incluir los inactivos, filtramos por state: true
+  if (!includeInactive) {
+    whereClause.state = true;
+  }
+
+  // Búsqueda textual opcional
   if (search) {
     whereClause[Op.or] = [
-      { nombre: { [Op.iLike]: `%${search}%` } },
-      { apellido: { [Op.iLike]: `%${search}%` } },
-      { correo_electronico: { [Op.iLike]: `%${search}%` } },
-      { razon_social: { [Op.iLike]: `%${search}%` } },
-      { nit: { [Op.iLike]: `%${search}%` } },
-      { representante_legal: { [Op.iLike]: `%${search}%` } }
+      { '$persona_natural.nombre$': { [Op.iLike]: `%${search}%` } },
+      { '$persona_natural.apellido$': { [Op.iLike]: `%${search}%` } },
+      { '$persona_juridica.razon_social$': { [Op.iLike]: `%${search}%` } },
+      { '$persona_juridica.nit$': { [Op.iLike]: `%${search}%` } },
+      { correo_electronico: { [Op.iLike]: `%${search}%` } }
     ];
   }
 
   const { count, rows } = await Client.findAndCountAll({
     where: whereClause,
-    include: [{
-      association: 'user',
-      attributes: ['id', 'username', 'email']
-    }],
+    include: [
+      { model: User, as: 'user', attributes: ['id', 'username', 'email'] },
+      { model: NaturalClient, as: 'persona_natural' },
+      { model: JuridicalClient, as: 'persona_juridica' }
+    ],
     limit: parseInt(limit),
     offset: parseInt(offset),
     order: [['created_at', 'DESC']]
@@ -53,94 +109,100 @@ export const findClientsByUserId = async (userId, options = {}) => {
   };
 };
 
+
+/* ============================================================
+   🟡 ACTUALIZAR CLIENTE
+   ============================================================ */
 export const updateClient = async (id, clientData) => {
   const client = await Client.findByPk(id);
   if (!client) return null;
-  
-  await client.update(clientData);
+
+  const { tipo_cliente, ...rest } = clientData;
+
+  await client.update({ tipo_cliente: tipo_cliente || client.tipo_cliente });
+
+  if (client.tipo_cliente === 'persona_natural') {
+    const data = await NaturalClient.findOne({ where: { client_id: client.id } });
+    if (data) await data.update(rest);
+  } else if (client.tipo_cliente === 'persona_juridica') {
+    const data = await JuridicalClient.findOne({ where: { client_id: client.id } });
+    if (data) await data.update(rest);
+  }
+
+  return findClientById(client.id);
+};
+
+export const updateClientState = async (id, state) => {
+  const client = await Client.findByPk(id);
+  if (!client) return null;
+  client.state = state;
+  await client.save();
   return client;
 };
 
+/* ============================================================
+   🔴 ELIMINAR CLIENTE
+   ============================================================ */
 export const deleteClient = async (id) => {
   const client = await Client.findByPk(id);
   if (!client) return null;
-  
-  await client.destroy();
-  return client;
-};
 
+  await updateClientState(id, false);
+  await client.save()
+  return client; // Retorna el cliente actualizado
+}
+
+
+
+
+
+/* ============================================================
+   🔍 BUSCAR POR CAMPOS ESPECÍFICOS
+   ============================================================ */
 export const findClientByEmail = async (email) => {
-  return Client.findOne({ where: { correo_electronico: email } });
-};
-
-export const findClientByEmailAndUserId = async (email, userId) => {
-  return Client.findOne({ 
-    where: { 
-      correo_electronico: email,
-      user_id: userId
-    } 
-  });
-};
-
-export const findClientByPhone = async (phoneNumber) => {
-  return Client.findOne({ where: { numero_telefono: phoneNumber } });
-};
-
-export const findClientByPhoneAndUserId = async (phoneNumber, userId) => {
-  return Client.findOne({ 
-    where: { 
-      numero_telefono: phoneNumber,
-      user_id: userId
-    } 
+  return Client.findOne({
+    where: { correo_electronico: email },
+    include: [
+      { model: NaturalClient, as: 'persona_natural' },
+      { model: JuridicalClient, as: 'persona_juridica' }
+    ]
   });
 };
 
 export const findClientByNit = async (nit) => {
-  return Client.findOne({ where: { nit: nit } });
+  return Client.findOne({
+    include: [
+      {
+        model: JuridicalClient,
+        as: 'persona_juridica',
+        where: { nit }
+      }
+    ]
+  });
 };
 
-export const findClientByNitAndUserId = async (nit, userId) => {
-  return Client.findOne({ 
-    where: { 
-      nit: nit,
-      user_id: userId
-    } 
+export const findClientByPhone = async (phone) => {
+  return Client.findOne({
+    where: { numero_telefono: phone },
+    include: [
+      { model: NaturalClient, as: 'persona_natural' },
+      { model: JuridicalClient, as: 'persona_juridica' }
+    ]
   });
 };
 
 export const findClientsByType = async (userId, tipoCliente, options = {}) => {
-  const { page = 1, limit = 10, search = '' } = options;
+  const { page = 1, limit = 10 } = options;
   const offset = (page - 1) * limit;
 
-  const whereClause = {
-    user_id: userId,
-    tipo_cliente: tipoCliente
-  };
-
-  // Búsqueda por campos específicos según el tipo
-  if (search) {
-    if (tipoCliente === 'persona_natural') {
-      whereClause[Op.or] = [
-        { nombre: { [Op.iLike]: `%${search}%` } },
-        { apellido: { [Op.iLike]: `%${search}%` } },
-        { correo_electronico: { [Op.iLike]: `%${search}%` } }
-      ];
-    } else if (tipoCliente === 'persona_juridica') {
-      whereClause[Op.or] = [
-        { razon_social: { [Op.iLike]: `%${search}%` } },
-        { nit: { [Op.iLike]: `%${search}%` } },
-        { representante_legal: { [Op.iLike]: `%${search}%` } },
-        { correo_electronico: { [Op.iLike]: `%${search}%` } }
-      ];
-    }
-  }
+  const include =
+    tipoCliente === 'persona_natural'
+      ? [{ model: NaturalClient, as: 'persona_natural' }]
+      : [{ model: JuridicalClient, as: 'persona_juridica' }];
 
   const { count, rows } = await Client.findAndCountAll({
-    where: whereClause,
-    include: [{
-      association: 'user',
-      attributes: ['id', 'username', 'email']
-    }],
+    where: { user_id: userId, tipo_cliente: tipoCliente },
+    include,
     limit: parseInt(limit),
     offset: parseInt(offset),
     order: [['created_at', 'DESC']]
