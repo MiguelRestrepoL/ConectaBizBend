@@ -4,15 +4,16 @@ import {
   findClientsByUserId,
   updateClient,
   deleteClient,
-  findClientByEmailAndUserId,
-  findClientByPhoneAndUserId,
-  findClientByNitAndUserId,
-  findClientsByType
+  findClientsByType,
+  findClientByEmail,
+  findClientByPhone,
+  findClientByNit,
+  updateClientState
 } from '../repository/client.repository.js';
 
 export const createClientService = async (clientData, userId) => {
   // Validar que el email no esté duplicado para este usuario
-  const existingEmail = await findClientByEmailAndUserId(clientData.correo_electronico, userId);
+  const existingEmail = await findClientByEmail(clientData.correo_electronico);
   if (existingEmail) {
     const error = new Error('Ya existe un cliente con este correo electrónico');
     error.status = 409;
@@ -20,7 +21,7 @@ export const createClientService = async (clientData, userId) => {
   }
 
   // Validar que el teléfono no esté duplicado para este usuario
-  const existingPhone = await findClientByPhoneAndUserId(clientData.numero_telefono, userId);
+  const existingPhone = await findClientByPhone(clientData.numero_telefono);
   if (existingPhone) {
     const error = new Error('Ya existe un cliente con este número de teléfono');
     error.status = 409;
@@ -29,7 +30,7 @@ export const createClientService = async (clientData, userId) => {
 
   // Si es persona jurídica, validar que el NIT no esté duplicado
   if (clientData.tipo_cliente === 'persona_juridica' && clientData.nit) {
-    const existingNit = await findClientByNitAndUserId(clientData.nit, userId);
+    const existingNit = await findClientByNit(clientData.nit);
     if (existingNit) {
       const error = new Error('Ya existe un cliente con este NIT');
       error.status = 409;
@@ -84,6 +85,8 @@ export const updateClientService = async (id, clientData, userId) => {
     error.status = 404;
     throw error;
   }
+
+
 
   // Verificar que el cliente pertenece al usuario
   if (client.user_id !== userId) {
@@ -145,6 +148,17 @@ export const deleteClientService = async (id, userId) => {
   const deletedClient = await deleteClient(id);
   return deletedClient;
 };
+
+export const updateClientStateService = async (id, state) => {
+  const client = await updateClientState(id, state);
+  if (!client) {
+    const error = new Error('Cliente no encontrado');
+    error.status = 404;
+    throw error;
+  }
+  return client;
+};
+
 
 export const validateClientData = (clientData) => {
   const errors = [];

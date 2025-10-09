@@ -6,7 +6,8 @@ import {
   getClientsByType,
   updateClient,
   deleteClient,
-  getClientStats
+  getClientStats,
+  updateClientState
 } from '../controllers/client.controller.js';
 import { authenticateToken } from '../middlewares/auth.middleware.js';
 
@@ -36,5 +37,7 @@ router.put('/:id', updateClient);
 
 // DELETE /api/clients/:id - Eliminar un cliente específico
 router.delete('/:id', deleteClient);
+
+router.patch('/:id/state', updateClientState);
 
 export default router;
