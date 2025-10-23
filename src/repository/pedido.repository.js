@@ -67,7 +67,7 @@ export const findPedidoById = async (orderId, userId) => {
  * 🟣 OBTENER PEDIDO POR ID Y USER ID
  * ============================================================
  */
-export const findPedidoByIdAndUserId = async (orderId, userId) => {
+export const findPedidoByIdAndUserId = async (orderId) => {
   try {
     return await Pedido.findOne({
       where: { id: orderId },
@@ -75,7 +75,6 @@ export const findPedidoByIdAndUserId = async (orderId, userId) => {
         {
           model: Client,
           as: 'cliente',
-          where: { user_id: userId }, // Validar que el cliente pertenece al usuario
           include: [
             {
               model: NaturalClient,
