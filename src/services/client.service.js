@@ -115,15 +115,6 @@ export const updateClientService = async (id, clientData, userId) => {
     }
   }
 
-  // Si se está actualizando el NIT, verificar que no esté duplicado
-  if (clientData.nit && clientData.nit !== client.nit) {
-    const existingNit = await findClientByNitAndUserId(clientData.nit, userId);
-    if (existingNit && existingNit.id !== id) {
-      const error = new Error('Ya existe un cliente con este NIT');
-      error.status = 409;
-      throw error;
-    }
-  }
 
   const updatedClient = await updateClient(id, clientData);
   return updatedClient;
