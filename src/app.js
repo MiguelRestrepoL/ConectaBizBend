@@ -7,6 +7,7 @@ import cors from "cors";
 import authRoutes from './routes/auth.routes.js';
 import clientRoutes from './routes/client.routes.js';
 import pedidoRoutes from './routes/pedido.routes.js';
+import auditRoutes from './routes/audit.routes.js';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use(express.json());
 app.use('/api', authRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/pedidos', pedidoRoutes);
+app.use('/api/audits', auditRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {

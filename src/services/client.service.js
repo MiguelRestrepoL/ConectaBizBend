@@ -10,6 +10,7 @@ import {
   findClientByNit,
   updateClientState
 } from '../repository/client.repository.js';
+import { logAudit } from './audit.service.js';
 
 export const createClientService = async (clientData, userId) => {
   // Validar que el email no esté duplicado para este usuario
@@ -45,6 +46,24 @@ export const createClientService = async (clientData, userId) => {
   };
 
   const client = await createClient(clientWithUserId);
+
+  // Auditoría: creación de cliente
+  try {
+    await logAudit({
+      userId,
+      entityType: 'client',
+      entityId: client.id,
+      action: 'create',
+      metadata: {
+        correo_electronico: client.correo_electronico,
+        numero_telefono: client.numero_telefono,
+        tipo_cliente: client.tipo_cliente
+      }
+    });
+  } catch (_e) {
+    // Evitar que falle la creación por error de auditoría
+  }
+
   return client;
 };
 
