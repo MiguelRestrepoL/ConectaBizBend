@@ -9,6 +9,7 @@ import {
   getPedidoStatsByUserId
 } from '../repository/pedido.repository.js';
 import { findClientById } from '../repository/client.repository.js';
+import { logAudit } from './audit.service.js';
 
 export const createPedidoService = async (pedidoData, userId) => {
   // Verificar que el cliente pertenece al usuario
@@ -49,7 +50,26 @@ export const createPedidoService = async (pedidoData, userId) => {
     throw error;
   }
 
-  const pedido = await createPedido(pedidoData);
+  const pedido = await createPedido(pedidoData, userId);
+
+  // Auditoría: creación de pedido
+  try {
+    await logAudit({
+      userId,
+      entityType: 'pedido',
+      entityId: pedido.id,
+      action: 'create',
+      metadata: {
+        cliente_id: pedido.cliente_id,
+        titulo: pedido.titulo,
+        estado: pedido.estado,
+        fecha_entrega: pedido.fecha_entrega
+      }
+    });
+  } catch (_e) {
+    // No romper flujo por auditoría
+  }
+
   return pedido;
 };
 
