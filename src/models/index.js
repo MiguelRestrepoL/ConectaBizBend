@@ -2,6 +2,8 @@ import './User.model.js'
 import './item.model.js'
 import './Client.model.js'
 import './Pedido.model.js'
+import './Producto.model.js'
+import './PedidoProducto.model.js'
 import './BlacklistedToken.model.js'
 import './Audit.model.js'
 
@@ -9,6 +11,8 @@ import './Audit.model.js'
 import { User } from './User.model.js';
 import { Client } from './Client.model.js';
 import { Pedido } from './Pedido.model.js';
+import { Producto } from './Producto.model.js';
+import { PedidoProducto } from './PedidoProducto.model.js';
 import { BlacklistedToken } from './BlacklistedToken.model.js';
 import { JuridicalClient } from './JuridicalClient.js';
 import { NaturalClient } from './NaturalClient.model.js';
@@ -20,6 +24,8 @@ const models = {
   User,
   Client,
   Pedido,
+  Producto,
+  PedidoProducto,
   BlacklistedToken,
   JuridicalClient,
   NaturalClient,
@@ -56,5 +62,5 @@ Object.keys(models).forEach(modelName => {
 });
 
 
-export { User, Client, Pedido, BlacklistedToken, JuridicalClient, NaturalClient, Audit };
+export { User, Client, Pedido, Producto, PedidoProducto, BlacklistedToken, JuridicalClient, NaturalClient, Audit };
 

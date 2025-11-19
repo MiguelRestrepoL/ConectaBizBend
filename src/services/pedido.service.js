@@ -223,5 +223,32 @@ export const validatePedidoData = (pedidoData) => {
     }
   }
 
+  // Validar productos si se proporcionan
+  if (pedidoData.productos !== undefined) {
+    if (!Array.isArray(pedidoData.productos)) {
+      errors.push('Los productos deben ser un array');
+    } else if (pedidoData.productos.length > 0) {
+      pedidoData.productos.forEach((producto, index) => {
+        if (!producto.producto_id) {
+          errors.push(`El producto en la posición ${index + 1} debe tener un producto_id`);
+        } else if (!Number.isInteger(Number(producto.producto_id)) || Number(producto.producto_id) <= 0) {
+          errors.push(`El producto_id en la posición ${index + 1} debe ser un número entero positivo`);
+        }
+
+        if (!producto.cantidad) {
+          errors.push(`El producto en la posición ${index + 1} debe tener una cantidad`);
+        } else if (!Number.isInteger(Number(producto.cantidad)) || Number(producto.cantidad) <= 0) {
+          errors.push(`La cantidad en la posición ${index + 1} debe ser un número entero positivo`);
+        }
+
+        if (producto.precio_unitario === undefined || producto.precio_unitario === null) {
+          errors.push(`El producto en la posición ${index + 1} debe tener un precio_unitario`);
+        } else if (isNaN(producto.precio_unitario) || producto.precio_unitario < 0) {
+          errors.push(`El precio_unitario en la posición ${index + 1} debe ser un número positivo o cero`);
+        }
+      });
+    }
+  }
+
   return errors;
 };

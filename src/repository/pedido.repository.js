@@ -1,5 +1,7 @@
 import { Op } from 'sequelize';
 import { Pedido } from '../models/Pedido.model.js';
+import { Producto } from '../models/Producto.model.js';
+import { PedidoProducto } from '../models/PedidoProducto.model.js';
 import { Client } from '../models/Client.model.js';
 import { NaturalClient } from '../models/NaturalClient.model.js';
 import { JuridicalClient } from '../models/JuridicalClient.js';
@@ -11,14 +13,60 @@ import { sequelize } from '../config/database.js';
  * ============================================================
  */
 export const createPedido = async (orderData, userId) => {
+  const transaction = await sequelize.transaction();
+  
   try {
-    const newOrder = await Pedido.create({
-      ...orderData,
-      user_id: userId
-    });
+    const { productos, ...pedidoData } = orderData;
+    
+    // Crear el pedido
+    const newOrder = await Pedido.create(pedidoData, { transaction });
 
-    return newOrder;
+    // Si hay productos, agregarlos al pedido y actualizar stock
+    if (productos && Array.isArray(productos) && productos.length > 0) {
+      for (const item of productos) {
+        const { producto_id, cantidad, precio_unitario } = item;
+        
+        // Verificar que el producto existe y pertenece al usuario
+        const producto = await Producto.findByPk(producto_id, { transaction });
+        if (!producto) {
+          throw new Error(`Producto con ID ${producto_id} no encontrado`);
+        }
+        
+        if (producto.user_id !== userId) {
+          throw new Error(`No tienes permisos para usar el producto con ID ${producto_id}`);
+        }
+        
+        // Verificar stock disponible
+        if (producto.stock < cantidad) {
+          throw new Error(`Stock insuficiente para el producto ${producto.nombre}. Stock disponible: ${producto.stock}, solicitado: ${cantidad}`);
+        }
+        
+        // Calcular subtotal
+        const subtotal = cantidad * precio_unitario;
+        
+        // Crear registro en PedidoProducto
+        await PedidoProducto.create({
+          pedido_id: newOrder.id,
+          producto_id: producto_id,
+          cantidad: cantidad,
+          precio_unitario: precio_unitario,
+          subtotal: subtotal
+        }, { transaction });
+        
+        // Actualizar stock del producto (restar cantidad)
+        await Producto.update(
+          { stock: producto.stock - cantidad },
+          { where: { id: producto_id }, transaction }
+        );
+      }
+    }
+
+    await transaction.commit();
+    
+    // Retornar el pedido con sus productos
+    return findPedidoById(newOrder.id, userId);
   } catch (error) {
+    await transaction.rollback();
     console.error('Error al crear pedido:', error);
     throw error;
   }
@@ -51,6 +99,13 @@ export const findPedidoById = async (orderId, userId) => {
               attributes: ['razon_social', 'nit', 'representante_legal']
             }
           ]
+        },
+        {
+          model: Producto,
+          as: 'productos',
+          through: {
+            attributes: ['cantidad', 'precio_unitario', 'subtotal']
+          }
         }
       ]
     });
@@ -85,6 +140,13 @@ export const findPedidoByIdAndUserId = async (orderId) => {
               as: 'persona_juridica'
             }
           ]
+        },
+        {
+          model: Producto,
+          as: 'productos',
+          through: {
+            attributes: ['cantidad', 'precio_unitario', 'subtotal']
+          }
         }
       ]
     });
@@ -164,6 +226,14 @@ export const findPedidosByUserId = async (userId, options = {}) => {
               required: false
             }
           ]
+        },
+        {
+          model: Producto,
+          as: 'productos',
+          through: {
+            attributes: ['cantidad', 'precio_unitario', 'subtotal']
+          },
+          required: false
         }
       ],
       limit: parseInt(limit),
@@ -227,6 +297,14 @@ export const findPedidosByClienteId = async (clientId, userId, options = {}) => 
               required: false
             }
           ]
+        },
+        {
+          model: Producto,
+          as: 'productos',
+          through: {
+            attributes: ['cantidad', 'precio_unitario', 'subtotal']
+          },
+          required: false
         }
       ],
       limit: parseInt(limit),
