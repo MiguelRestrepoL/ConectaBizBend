@@ -99,6 +99,14 @@ Pedido.associate = (models) => {
     foreignKey: 'cliente_id',
     as: 'cliente'
   });
+
+  // Un pedido tiene muchos productos (relación muchos a muchos)
+  Pedido.belongsToMany(models.Producto, {
+    through: models.PedidoProducto,
+    foreignKey: 'pedido_id',
+    otherKey: 'producto_id',
+    as: 'productos'
+  });
 };
 
 export { Pedido };
