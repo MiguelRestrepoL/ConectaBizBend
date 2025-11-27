@@ -6,7 +6,7 @@ const router = Router();
 
 router.use(authenticateToken);
 
-// GET /api/audits - listar auditorías del usuario actualxd
+// GET /api/audits - listar auditorías del usuario actual
 router.get('/', listMyAudits);
 
 // GET /api/audits/search - buscar con filtros (limitado al usuario)
