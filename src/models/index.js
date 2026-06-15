@@ -8,7 +8,7 @@ import './BlacklistedToken.model.js'
 import './Audit.model.js'
 import './Cupon.model.js'
 import './Promocion.model.js'
-
+ 
 // Importar los modelos
 import { User } from './User.model.js';
 import { Client } from './Client.model.js';
@@ -21,8 +21,7 @@ import { NaturalClient } from './NaturalClient.model.js';
 import { Audit } from './Audit.model.js';
 import { Cupon } from './Cupon.model.js';
 import { Promocion } from './Promocion.model.js';
-
-
+ 
 // Crear objeto con todos los modelos
 const models = {
   User,
@@ -37,7 +36,7 @@ const models = {
   Cupon,
   Promocion
 };
-
+ 
 // 🔹 Relación 1:1 con NaturalClient
 Client.hasOne(NaturalClient, {
   foreignKey: 'client_id',
@@ -47,7 +46,7 @@ NaturalClient.belongsTo(Client, {
   foreignKey: 'client_id',
   as: 'cliente',
 });
-
+ 
 // 🔹 Relación 1:1 con JuridicalClient
 Client.hasOne(JuridicalClient, {
   foreignKey: 'client_id',
@@ -57,28 +56,12 @@ JuridicalClient.belongsTo(Client, {
   foreignKey: 'client_id',
   as: 'cliente',
 });
-
-Promocion.belongsToMany(Producto, {
-  through: 'promocion_productos',
-  foreignKey: 'promocion_id',
-  otherKey: 'producto_id',
-  as: 'productos'
-});
-Producto.belongsToMany(Promocion, {
-  through: 'promocion_productos',
-  foreignKey: 'producto_id',
-  otherKey: 'promocion_id',
-  as: 'promociones'
-});
-
-
-// Establecer las asociaciones
+ 
+// Establecer las asociaciones (incluye Promocion <-> Producto definidas en Promocion.model.js)
 Object.keys(models).forEach(modelName => {
   if (models[modelName].associate) {
     models[modelName].associate(models);
   }
 });
-
-
+ 
 export { User, Client, Pedido, Producto, PedidoProducto, BlacklistedToken, JuridicalClient, NaturalClient, Audit, Cupon, Promocion };
-
