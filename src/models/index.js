@@ -60,6 +60,11 @@ JuridicalClient.belongsTo(Client, {
   foreignKey: 'client_id',
   as: 'cliente',
 });
+
+Client.hasMany(Pedido, {
+  foreignKey: 'cliente_id',
+  as: 'pedidos',
+});
  
 // Establecer las asociaciones (incluye Promocion <-> Producto definidas en Promocion.model.js)
 Object.keys(models).forEach(modelName => {
