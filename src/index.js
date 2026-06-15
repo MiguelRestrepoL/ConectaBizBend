@@ -10,7 +10,7 @@ async function main() {
         const PORT = process.env.PORT || 3000;
 
         //sincroniza los modelos con la base de datos (force: true borra y recrea las tablas)
-        await sequelize.sync({ force: true });
+        await sequelize.sync({ force: false });
         console.log('📦 Base de datos recreada según los modelos');
         console.log('⚠️  IMPORTANTE: Cambia force: true a force: false en src/index.js para futuras ejecuciones');
 
