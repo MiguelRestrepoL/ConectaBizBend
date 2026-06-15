@@ -154,7 +154,7 @@ export const getTopProductos = async (userId, fechaInicio, fechaFin, limit = 5) 
   }));
 };
 
-// ── PEDIDOS RECIENTES ─────────────────────────────────────────────────────────
+// ── PEDIDOS RECIENTES a ─────────────────────────────────────────────────────────
 
 export const getPedidosRecientes = async (userId, limit = 8) => {
   const rows = await Pedido.findAll({
