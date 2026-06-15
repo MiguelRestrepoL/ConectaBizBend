@@ -6,6 +6,8 @@ import './Producto.model.js'
 import './PedidoProducto.model.js'
 import './BlacklistedToken.model.js'
 import './Audit.model.js'
+import './Cupon.model.js'
+import './Promocion.model.js'
 
 // Importar los modelos
 import { User } from './User.model.js';
@@ -17,6 +19,8 @@ import { BlacklistedToken } from './BlacklistedToken.model.js';
 import { JuridicalClient } from './JuridicalClient.js';
 import { NaturalClient } from './NaturalClient.model.js';
 import { Audit } from './Audit.model.js';
+import { Cupon } from './Cupon.model.js';
+import { Promocion } from './Promocion.model.js';
 
 
 // Crear objeto con todos los modelos
@@ -29,7 +33,9 @@ const models = {
   BlacklistedToken,
   JuridicalClient,
   NaturalClient,
-  Audit
+  Audit,
+  Cupon,
+  Promocion
 };
 
 // 🔹 Relación 1:1 con NaturalClient
@@ -52,6 +58,18 @@ JuridicalClient.belongsTo(Client, {
   as: 'cliente',
 });
 
+Promocion.belongsToMany(Producto, {
+  through: 'promocion_productos',
+  foreignKey: 'promocion_id',
+  otherKey: 'producto_id',
+  as: 'productos'
+});
+Producto.belongsToMany(Promocion, {
+  through: 'promocion_productos',
+  foreignKey: 'producto_id',
+  otherKey: 'promocion_id',
+  as: 'promociones'
+});
 
 
 // Establecer las asociaciones
@@ -62,5 +80,5 @@ Object.keys(models).forEach(modelName => {
 });
 
 
-export { User, Client, Pedido, Producto, PedidoProducto, BlacklistedToken, JuridicalClient, NaturalClient, Audit };
+export { User, Client, Pedido, Producto, PedidoProducto, BlacklistedToken, JuridicalClient, NaturalClient, Audit, Cupon, Promocion };
 

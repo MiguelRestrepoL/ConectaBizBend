@@ -9,6 +9,7 @@ import clientRoutes from './routes/client.routes.js';
 import pedidoRoutes from './routes/pedido.routes.js';
 import productoRoutes from './routes/producto.routes.js';
 import auditRoutes from './routes/audit.routes.js';
+import marketingRoutes from './routes/marketing.routes.js';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/productos', productoRoutes);
 app.use('/api/audits', auditRoutes);
+app.use('/api/marketing', marketingRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {
