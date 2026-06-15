@@ -8,6 +8,7 @@ import './BlacklistedToken.model.js'
 import './Audit.model.js'
 import './Cupon.model.js'
 import './Promocion.model.js'
+import './Contenido.model.js'
  
 // Importar los modelos
 import { User } from './User.model.js';
@@ -21,6 +22,7 @@ import { NaturalClient } from './NaturalClient.model.js';
 import { Audit } from './Audit.model.js';
 import { Cupon } from './Cupon.model.js';
 import { Promocion } from './Promocion.model.js';
+import { TiendaPerfil, Anuncio } from './Contenido.model.js';
  
 // Crear objeto con todos los modelos
 const models = {
@@ -34,7 +36,9 @@ const models = {
   NaturalClient,
   Audit,
   Cupon,
-  Promocion
+  Promocion,
+  TiendaPerfil,
+  Anuncio
 };
  
 // 🔹 Relación 1:1 con NaturalClient
@@ -64,4 +68,4 @@ Object.keys(models).forEach(modelName => {
   }
 });
  
-export { User, Client, Pedido, Producto, PedidoProducto, BlacklistedToken, JuridicalClient, NaturalClient, Audit, Cupon, Promocion };
+export { User, Client, Pedido, Producto, PedidoProducto, BlacklistedToken, JuridicalClient, NaturalClient, Audit, Cupon, Promocion, TiendaPerfil, Anuncio };

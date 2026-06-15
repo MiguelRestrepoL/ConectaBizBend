@@ -11,6 +11,8 @@ import productoRoutes from './routes/producto.routes.js';
 import auditRoutes from './routes/audit.routes.js';
 import marketingRoutes from './routes/marketing.routes.js';
 import estadisticasRoutes from './routes/estadisticas.routes.js';
+import topClientesRoutes from './routes/top-clientes.routes.js';
+import contenidoRoutes from './routes/contenido.routes.js';
 
 dotenv.config();
 
@@ -45,6 +47,8 @@ app.use('/api/productos', productoRoutes);
 app.use('/api/audits', auditRoutes);
 app.use('/api/marketing', marketingRoutes);
 app.use('/api/estadisticas', estadisticasRoutes);
+app.use('/api/top-clientes', topClientesRoutes);
+app.use('/api/contenido', contenidoRoutes);
 
 // Ruta de prueba
 app.get('/', (req, res) => {
