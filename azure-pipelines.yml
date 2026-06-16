@@ -6,13 +6,13 @@ pool:
 
 steps:
 - script: |
-    "C:\Program Files\nodejs\node.exe" --version
+    "C:\nvm4w\nodejs\node.exe" --version
   displayName: 'Verificar Node.js'
 
 - script: |
-    "C:\Program Files\nodejs\npm.cmd" install
+    "C:\nvm4w\nodejs\npm.cmd" install
   displayName: 'Instalar dependencias'
 
 - script: |
-    "C:\Program Files\nodejs\npm.cmd" test
+    "C:\nvm4w\nodejs\npm.cmd" test
   displayName: 'Correr tests'
