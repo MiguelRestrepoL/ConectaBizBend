@@ -2,7 +2,7 @@ trigger:
 - produccion
 
 pool:
-  vmImage: ubuntu-latest
+  name: Default
 
 steps:
 - script: node --version
