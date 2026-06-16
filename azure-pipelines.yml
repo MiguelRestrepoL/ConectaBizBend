@@ -5,11 +5,14 @@ pool:
   name: Default
 
 steps:
-- script: node --version
+- script: |
+    "C:\Program Files\nodejs\node.exe" --version
   displayName: 'Verificar Node.js'
 
-- script: npm install
+- script: |
+    "C:\Program Files\nodejs\npm.cmd" install
   displayName: 'Instalar dependencias'
 
-- script: npm test
+- script: |
+    "C:\Program Files\nodejs\npm.cmd" test
   displayName: 'Correr tests'
