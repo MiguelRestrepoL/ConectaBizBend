@@ -24,7 +24,7 @@ import { Audit } from './Audit.model.js';
 import { Cupon } from './Cupon.model.js';
 import { Promocion } from './Promocion.model.js';
 import { TiendaPerfil, Anuncio } from './Contenido.model.js';
-import { Proveedor } from './Proovedor.model.js';
+import { Proveedor } from './Proveedor.model.js';
  
 // Crear objeto con todos los modelos
 const models = {
