@@ -6,215 +6,123 @@ import {
   deleteProducto,
   updateProductoStock,
   findProductoByCodigo,
-  findProductosStockBajo
+  findProductosStockBajo,
 } from '../repository/producto.repository.js';
-import { findClientById } from '../repository/client.repository.js';
-import { logAudit } from './audit.service.js';
-
+import { findProveedorById } from '../repository/proveedor.repository.js';
+import { logAudit } from '../repository/audit.repository.js';
+ 
+/* ── Helper: valida que el proveedor exista y pertenezca al usuario ── */
+const validarProveedor = async (proveedorId, userId) => {
+  const proveedor = await findProveedorById(proveedorId);
+  if (!proveedor) {
+    const e = new Error('Proveedor no encontrado'); e.status = 404; throw e;
+  }
+  if (proveedor.user_id !== userId) {
+    const e = new Error('No tienes permisos para asignar este proveedor'); e.status = 403; throw e;
+  }
+  return proveedor;
+};
+ 
 export const createProductoService = async (productoData, userId) => {
-  // Validar que el código no esté duplicado para este usuario (si se proporciona)
+  const errors = validateProductoData(productoData);
+  if (errors.length > 0) {
+    const e = new Error(errors.join(', ')); e.status = 400; throw e;
+  }
+ 
   if (productoData.codigo) {
-    const existingProducto = await findProductoByCodigo(productoData.codigo, userId);
-    if (existingProducto) {
-      const error = new Error('Ya existe un producto con este código');
-      error.status = 409;
-      throw error;
+    const existing = await findProductoByCodigo(productoData.codigo, userId);
+    if (existing) {
+      const e = new Error('Ya existe un producto con este código'); e.status = 409; throw e;
     }
   }
-
-  // Si se proporciona un proveedor, verificar que pertenece al usuario
+ 
   if (productoData.proveedor_id) {
-    const proveedor = await findClientById(productoData.proveedor_id);
-    if (!proveedor) {
-      const error = new Error('Proveedor no encontrado');
-      error.status = 404;
-      throw error;
-    }
-
-    if (proveedor.user_id !== userId) {
-      const error = new Error('No tienes permisos para asignar este proveedor');
-      error.status = 403;
-      throw error;
-    }
+    await validarProveedor(productoData.proveedor_id, userId);
   }
-
-  // Agregar el user_id a los datos del producto
-  const productoWithUserId = {
-    ...productoData,
-    user_id: userId
-  };
-
-  const producto = await createProducto(productoWithUserId);
-
-  // Auditoría: creación de producto
+ 
+  const producto = await createProducto({ ...productoData, user_id: userId });
+ 
   try {
     await logAudit({
       userId,
       entityType: 'producto',
       entityId: producto.id,
       action: 'create',
-      metadata: {
-        nombre: producto.nombre,
-        codigo: producto.codigo,
-        precio: producto.precio,
-        stock: producto.stock
-      }
+      metadata: { nombre: producto.nombre, codigo: producto.codigo, precio: producto.precio, stock: producto.stock },
     });
-  } catch (_e) {
-    // Evitar que falle la creación por error de auditoría
-  }
-
+  } catch (_e) { /* no bloquear creación por error de auditoría */ }
+ 
   return producto;
 };
-
+ 
 export const getProductoByIdService = async (id, userId) => {
   const producto = await findProductoById(id);
-
-  if (!producto) {
-    const error = new Error('Producto no encontrado');
-    error.status = 404;
-    throw error;
-  }
-
-  // Verificar que el producto pertenece al usuario
-  if (producto.user_id !== userId) {
-    const error = new Error('No tienes permisos para acceder a este producto');
-    error.status = 403;
-    throw error;
-  }
-
+  if (!producto) { const e = new Error('Producto no encontrado'); e.status = 404; throw e; }
+  if (producto.user_id !== userId) { const e = new Error('No tienes permisos para acceder a este producto'); e.status = 403; throw e; }
   return producto;
 };
-
+ 
 export const getProductosByUserIdService = async (userId, options = {}) => {
-  const result = await findProductosByUserId(userId, options);
-  return result;
+  return findProductosByUserId(userId, options);
 };
-
+ 
 export const updateProductoService = async (id, productoData, userId) => {
   const producto = await findProductoById(id);
-
-  if (!producto) {
-    const error = new Error('Producto no encontrado');
-    error.status = 404;
-    throw error;
-  }
-
-  // Verificar que el producto pertenece al usuario
-  if (producto.user_id !== userId) {
-    const error = new Error('No tienes permisos para modificar este producto');
-    error.status = 403;
-    throw error;
-  }
-
-  // Si se está actualizando el código, verificar que no esté duplicado
+  if (!producto) { const e = new Error('Producto no encontrado'); e.status = 404; throw e; }
+  if (producto.user_id !== userId) { const e = new Error('No tienes permisos para modificar este producto'); e.status = 403; throw e; }
+ 
   if (productoData.codigo && productoData.codigo !== producto.codigo) {
-    const existingProducto = await findProductoByCodigo(productoData.codigo, userId);
-    if (existingProducto && existingProducto.id !== id) {
-      const error = new Error('Ya existe un producto con este código');
-      error.status = 409;
-      throw error;
+    const existing = await findProductoByCodigo(productoData.codigo, userId);
+    if (existing && existing.id !== id) {
+      const e = new Error('Ya existe un producto con este código'); e.status = 409; throw e;
     }
   }
-
-  // Si se está actualizando el proveedor, verificar que pertenece al usuario
+ 
+  // Solo validar proveedor si se está cambiando
   if (productoData.proveedor_id && productoData.proveedor_id !== producto.proveedor_id) {
-    const proveedor = await findClientById(productoData.proveedor_id);
-    if (!proveedor) {
-      const error = new Error('Proveedor no encontrado');
-      error.status = 404;
-      throw error;
-    }
-
-    if (proveedor.user_id !== userId) {
-      const error = new Error('No tienes permisos para asignar este proveedor');
-      error.status = 403;
-      throw error;
-    }
+    await validarProveedor(productoData.proveedor_id, userId);
   }
-
-  const updatedProducto = await updateProducto(id, productoData);
-  return updatedProducto;
+ 
+  return updateProducto(id, productoData);
 };
-
+ 
 export const deleteProductoService = async (id, userId) => {
   const producto = await findProductoById(id);
-
-  if (!producto) {
-    const error = new Error('Producto no encontrado');
-    error.status = 404;
-    throw error;
-  }
-
-  // Verificar que el producto pertenece al usuario
-  if (producto.user_id !== userId) {
-    const error = new Error('No tienes permisos para eliminar este producto');
-    error.status = 403;
-    throw error;
-  }
-
-  const deletedProducto = await deleteProducto(id);
-  return deletedProducto;
+  if (!producto) { const e = new Error('Producto no encontrado'); e.status = 404; throw e; }
+  if (producto.user_id !== userId) { const e = new Error('No tienes permisos para eliminar este producto'); e.status = 403; throw e; }
+  return deleteProducto(id);
 };
-
+ 
 export const updateProductoStockService = async (id, cantidad, operation, userId) => {
   const producto = await findProductoById(id);
-
-  if (!producto) {
-    const error = new Error('Producto no encontrado');
-    error.status = 404;
-    throw error;
-  }
-
-  // Verificar que el producto pertenece al usuario
-  if (producto.user_id !== userId) {
-    const error = new Error('No tienes permisos para modificar este producto');
-    error.status = 403;
-    throw error;
-  }
-
-  const updatedProducto = await updateProductoStock(id, cantidad, operation);
-  return updatedProducto;
+  if (!producto) { const e = new Error('Producto no encontrado'); e.status = 404; throw e; }
+  if (producto.user_id !== userId) { const e = new Error('No tienes permisos para modificar este producto'); e.status = 403; throw e; }
+  return updateProductoStock(id, cantidad, operation);
 };
-
+ 
 export const getProductosStockBajoService = async (userId) => {
-  const productos = await findProductosStockBajo(userId);
-  return productos;
+  return findProductosStockBajo(userId);
 };
-
+ 
 export const validateProductoData = (productoData) => {
   const errors = [];
-
-  // Validaciones obligatorias
-  if (!productoData.nombre || productoData.nombre.trim() === '') {
-    errors.push('El nombre es obligatorio');
-  }
-
+  if (!productoData.nombre || productoData.nombre.trim() === '') errors.push('El nombre es obligatorio');
   if (productoData.precio === undefined || productoData.precio === null) {
     errors.push('El precio es obligatorio');
   } else if (isNaN(productoData.precio) || productoData.precio < 0) {
     errors.push('El precio debe ser un número positivo o cero');
   }
-
   if (productoData.stock !== undefined && productoData.stock !== null) {
-    if (!Number.isInteger(Number(productoData.stock)) || Number(productoData.stock) < 0) {
+    if (!Number.isInteger(Number(productoData.stock)) || Number(productoData.stock) < 0)
       errors.push('El stock debe ser un número entero positivo o cero');
-    }
   }
-
   if (productoData.stock_minimo !== undefined && productoData.stock_minimo !== null) {
-    if (!Number.isInteger(Number(productoData.stock_minimo)) || Number(productoData.stock_minimo) < 0) {
+    if (!Number.isInteger(Number(productoData.stock_minimo)) || Number(productoData.stock_minimo) < 0)
       errors.push('El stock mínimo debe ser un número entero positivo o cero');
-    }
   }
-
-  // Validar proveedor_id si se proporciona
   if (productoData.proveedor_id !== undefined && productoData.proveedor_id !== null) {
-    if (!Number.isInteger(Number(productoData.proveedor_id)) || Number(productoData.proveedor_id) <= 0) {
+    if (!Number.isInteger(Number(productoData.proveedor_id)) || Number(productoData.proveedor_id) <= 0)
       errors.push('El ID del proveedor debe ser un número entero positivo');
-    }
   }
-
   return errors;
 };
-
