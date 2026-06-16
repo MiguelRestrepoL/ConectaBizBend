@@ -9,6 +9,7 @@ import './Audit.model.js'
 import './Cupon.model.js'
 import './Promocion.model.js'
 import './Contenido.model.js'
+import './Proovedor.model.js'
  
 // Importar los modelos
 import { User } from './User.model.js';
@@ -23,6 +24,7 @@ import { Audit } from './Audit.model.js';
 import { Cupon } from './Cupon.model.js';
 import { Promocion } from './Promocion.model.js';
 import { TiendaPerfil, Anuncio } from './Contenido.model.js';
+import { Proveedor } from './Proovedor.model.js';
  
 // Crear objeto con todos los modelos
 const models = {
@@ -38,7 +40,8 @@ const models = {
   Cupon,
   Promocion,
   TiendaPerfil,
-  Anuncio
+  Anuncio,
+  Proveedor
 };
  
 // 🔹 Relación 1:1 con NaturalClient
@@ -60,7 +63,7 @@ JuridicalClient.belongsTo(Client, {
   foreignKey: 'client_id',
   as: 'cliente',
 });
-
+ 
 Client.hasMany(Pedido, {
   foreignKey: 'cliente_id',
   as: 'pedidos',
@@ -73,4 +76,4 @@ Object.keys(models).forEach(modelName => {
   }
 });
  
-export { User, Client, Pedido, Producto, PedidoProducto, BlacklistedToken, JuridicalClient, NaturalClient, Audit, Cupon, Promocion, TiendaPerfil, Anuncio };
+export { User, Client, Pedido, Producto, PedidoProducto, BlacklistedToken, JuridicalClient, NaturalClient, Audit, Cupon, Promocion, TiendaPerfil, Anuncio, Proveedor };
