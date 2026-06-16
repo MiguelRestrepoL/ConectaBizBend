@@ -4,13 +4,19 @@
   "description": "",
   "main": "index.js",
   "type": "module",
-  "scripts": {
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js",
-    "reset-db": "node src/index.js",
-    "clean-tokens": "node src/scripts/cleanExpiredTokens.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+"scripts": {
+  "dev": "nodemon src/index.js",
+  "start": "node src/index.js",
+  "reset-db": "node src/index.js",
+  "clean-tokens": "node src/scripts/cleanExpiredTokens.js",
+  "test": "node --experimental-vm-modules node_modules/.bin/jest --testTimeout=10000"
+},
+  "jest": {
+  "transform": {},
+  "extensionsToTreatAsEsm": [".js"],
+  "testEnvironment": "node",
+  "testMatch": ["**/tests/**/*.test.js"]
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MiguelRestrepoL/ConectaBizBend.git"
@@ -35,7 +41,9 @@
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "@jest/globals": "^30.4.1",
+    "jest": "^30.4.2",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.2.2"
   }
 }
-
