@@ -1,8 +1,8 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import { sequelize } from '../config/database.js';
-
+ 
 class Audit extends Model {}
-
+ 
 Audit.init(
   {
     id: {
@@ -18,7 +18,7 @@ Audit.init(
       onDelete: 'CASCADE'
     },
     entity_type: {
-      type: DataTypes.ENUM('client', 'pedido'),
+      type: DataTypes.ENUM('client', 'pedido', 'producto', 'cupon', 'promocion', 'proveedor'),
       allowNull: false
     },
     entity_id: {
@@ -26,7 +26,7 @@ Audit.init(
       allowNull: false
     },
     action: {
-      type: DataTypes.ENUM('create'),
+      type: DataTypes.ENUM('create', 'update', 'delete', 'update_stock', 'toggle_estado'),
       allowNull: false
     },
     metadata: {
@@ -52,12 +52,10 @@ Audit.init(
     ]
   }
 );
-
-// Asociaciones declarativas opcionales; se completan en models/index.js
+ 
 Audit.associate = (models) => {
   Audit.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
 };
-
+ 
 export { Audit };
-
 
