@@ -10,7 +10,6 @@ import {
 } from '../repository/producto.repository.js';
 import { findProveedorById } from '../repository/proveedor.repository.js';
 import { logAudit } from './audit.service.js';
-
  
 /* ── Helper: valida que el proveedor exista y pertenezca al usuario ── */
 const validarProveedor = async (proveedorId, userId) => {
@@ -51,7 +50,7 @@ export const createProductoService = async (productoData, userId) => {
       action: 'create',
       metadata: { nombre: producto.nombre, codigo: producto.codigo, precio: producto.precio, stock: producto.stock },
     });
-  } catch (_e) { /* no bloquear creación por error de auditoría */ }
+  } catch (_e) {}
  
   return producto;
 };
@@ -79,26 +78,63 @@ export const updateProductoService = async (id, productoData, userId) => {
     }
   }
  
-  // Solo validar proveedor si se está cambiando
   if (productoData.proveedor_id && productoData.proveedor_id !== producto.proveedor_id) {
     await validarProveedor(productoData.proveedor_id, userId);
   }
  
-  return updateProducto(id, productoData);
+  const updated = await updateProducto(id, productoData);
+ 
+  try {
+    await logAudit({
+      userId,
+      entityType: 'producto',
+      entityId: id,
+      action: 'update',
+      metadata: { nombre: productoData.nombre || producto.nombre, cambios: Object.keys(productoData) },
+    });
+  } catch (_e) {}
+ 
+  return updated;
 };
  
 export const deleteProductoService = async (id, userId) => {
   const producto = await findProductoById(id);
   if (!producto) { const e = new Error('Producto no encontrado'); e.status = 404; throw e; }
   if (producto.user_id !== userId) { const e = new Error('No tienes permisos para eliminar este producto'); e.status = 403; throw e; }
-  return deleteProducto(id);
+ 
+  const result = await deleteProducto(id);
+ 
+  try {
+    await logAudit({
+      userId,
+      entityType: 'producto',
+      entityId: id,
+      action: 'delete',
+      metadata: { nombre: producto.nombre, codigo: producto.codigo },
+    });
+  } catch (_e) {}
+ 
+  return result;
 };
  
 export const updateProductoStockService = async (id, cantidad, operation, userId) => {
   const producto = await findProductoById(id);
   if (!producto) { const e = new Error('Producto no encontrado'); e.status = 404; throw e; }
   if (producto.user_id !== userId) { const e = new Error('No tienes permisos para modificar este producto'); e.status = 403; throw e; }
-  return updateProductoStock(id, cantidad, operation);
+ 
+  const updated = await updateProductoStock(id, cantidad, operation);
+ 
+  try {
+    await logAudit({
+      userId,
+      entityType: 'producto',
+      entityId: id,
+      action: 'update_stock',
+      metadata: { nombre: producto.nombre, operacion: operation, cantidad, stock_anterior: producto.stock },
+    });
+  } catch (_e) {}
+ 
+  return updated;
 };
  
 export const getProductosStockBajoService = async (userId) => {
@@ -127,3 +163,4 @@ export const validateProductoData = (productoData) => {
   }
   return errors;
 };
+ 

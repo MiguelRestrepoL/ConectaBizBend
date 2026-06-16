@@ -50,14 +50,27 @@ export const updateCuponService = async (id, data, userId) => {
     }
   }
  
-  return await updateCupon(id, data);
+  const updated = await updateCupon(id, data);
+ 
+  try {
+    await logAudit({ userId, entityType: 'cupon', entityId: id, action: 'update', metadata: { codigo: cupon.codigo, cambios: Object.keys(data) } });
+  } catch (_e) {}
+ 
+  return updated;
 };
  
 export const deleteCuponService = async (id, userId) => {
   const cupon = await findCuponById(id);
   if (!cupon) { const e = new Error('Cupón no encontrado'); e.status = 404; throw e; }
   if (cupon.user_id !== userId) { const e = new Error('No tienes permisos'); e.status = 403; throw e; }
-  return await deleteCupon(id);
+ 
+  const result = await deleteCupon(id);
+ 
+  try {
+    await logAudit({ userId, entityType: 'cupon', entityId: id, action: 'delete', metadata: { codigo: cupon.codigo, tipo: cupon.tipo, valor: cupon.valor } });
+  } catch (_e) {}
+ 
+  return result;
 };
  
 /* ============================================================
@@ -68,7 +81,7 @@ export const createPromocionService = async (data, productoIds = [], userId) => 
   const promocion = await createPromocion({ ...data, user_id: userId }, productoIds);
  
   try {
-    await logAudit({ userId, entityType: 'promocion', entityId: promocion.id, action: 'create', metadata: { nombre: promocion.nombre } });
+    await logAudit({ userId, entityType: 'promocion', entityId: promocion.id, action: 'create', metadata: { nombre: promocion.nombre, tipo_descuento: promocion.tipo_descuento, valor_descuento: promocion.valor_descuento, productos: productoIds.length } });
   } catch (_e) {}
  
   return promocion;
@@ -89,14 +102,28 @@ export const updatePromocionService = async (id, data, productoIds, userId) => {
   const promocion = await findPromocionById(id);
   if (!promocion) { const e = new Error('Promoción no encontrada'); e.status = 404; throw e; }
   if (promocion.user_id !== userId) { const e = new Error('No tienes permisos'); e.status = 403; throw e; }
-  return await updatePromocion(id, data, productoIds);
+ 
+  const updated = await updatePromocion(id, data, productoIds);
+ 
+  try {
+    await logAudit({ userId, entityType: 'promocion', entityId: id, action: 'update', metadata: { nombre: promocion.nombre, cambios: Object.keys(data), productos_actualizados: productoIds !== undefined } });
+  } catch (_e) {}
+ 
+  return updated;
 };
  
 export const deletePromocionService = async (id, userId) => {
   const promocion = await findPromocionById(id);
   if (!promocion) { const e = new Error('Promoción no encontrada'); e.status = 404; throw e; }
   if (promocion.user_id !== userId) { const e = new Error('No tienes permisos'); e.status = 403; throw e; }
-  return await deletePromocion(id);
+ 
+  const result = await deletePromocion(id);
+ 
+  try {
+    await logAudit({ userId, entityType: 'promocion', entityId: id, action: 'delete', metadata: { nombre: promocion.nombre } });
+  } catch (_e) {}
+ 
+  return result;
 };
  
 export const validateCuponData = (data) => {
@@ -117,3 +144,4 @@ export const validatePromocionData = (data) => {
   else if (isNaN(data.valor_descuento) || data.valor_descuento < 0) errors.push('El valor debe ser un número positivo');
   return errors;
 };
+ 

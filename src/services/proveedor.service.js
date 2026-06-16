@@ -5,6 +5,7 @@ import {
   updateProveedor,
   deleteProveedor,
 } from '../repository/proveedor.repository.js';
+import { logAudit } from './audit.service.js';
  
 const validate = (data, requireNombre = true) => {
   const errors = [];
@@ -23,7 +24,20 @@ const clean = (data) => {
 export const createProveedorService = async (userId, data) => {
   const errors = validate(data);
   if (errors.length) { const e = new Error(errors.join(', ')); e.status = 400; throw e; }
-  return createProveedor({ ...clean(data), user_id: userId });
+ 
+  const proveedor = await createProveedor({ ...clean(data), user_id: userId });
+ 
+  try {
+    await logAudit({
+      userId,
+      entityType: 'proveedor',
+      entityId: proveedor.id,
+      action: 'create',
+      metadata: { nombre: proveedor.nombre, correo: proveedor.correo, ciudad: proveedor.ciudad },
+    });
+  } catch (_e) {}
+ 
+  return proveedor;
 };
  
 export const getProveedoresService = async (userId, options) => {
@@ -41,14 +55,40 @@ export const updateProveedorService = async (userId, id, data) => {
   const p = await findProveedorById(id);
   if (!p) { const e = new Error('Proveedor no encontrado'); e.status = 404; throw e; }
   if (p.user_id !== userId) { const e = new Error('Sin permisos'); e.status = 403; throw e; }
-  const errors = validate(data, false); // nombre opcional en update
+  const errors = validate(data, false);
   if (errors.length) { const e = new Error(errors.join(', ')); e.status = 400; throw e; }
-  return updateProveedor(id, clean(data));
+ 
+  const updated = await updateProveedor(id, clean(data));
+ 
+  try {
+    await logAudit({
+      userId,
+      entityType: 'proveedor',
+      entityId: id,
+      action: data.activo !== undefined && Object.keys(clean(data)).length === 1 ? 'toggle_estado' : 'update',
+      metadata: { nombre: p.nombre, cambios: Object.keys(clean(data)), activo: data.activo },
+    });
+  } catch (_e) {}
+ 
+  return updated;
 };
  
 export const deleteProveedorService = async (userId, id) => {
   const p = await findProveedorById(id);
   if (!p) { const e = new Error('Proveedor no encontrado'); e.status = 404; throw e; }
   if (p.user_id !== userId) { const e = new Error('Sin permisos'); e.status = 403; throw e; }
-  return deleteProveedor(id);
+ 
+  const result = await deleteProveedor(id);
+ 
+  try {
+    await logAudit({
+      userId,
+      entityType: 'proveedor',
+      entityId: id,
+      action: 'delete',
+      metadata: { nombre: p.nombre, correo: p.correo },
+    });
+  } catch (_e) {}
+ 
+  return result;
 };
