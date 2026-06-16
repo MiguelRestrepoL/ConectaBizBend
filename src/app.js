@@ -13,6 +13,7 @@ import marketingRoutes from './routes/marketing.routes.js';
 import estadisticasRoutes from './routes/estadisticas.routes.js';
 import topClientesRoutes from './routes/top-clientes.routes.js';
 import contenidoRoutes from './routes/contenido.routes.js';
+import proveedorRoutes from './routes/proveedor.routes.js';
 
 dotenv.config();
 
@@ -49,6 +50,8 @@ app.use('/api/marketing', marketingRoutes);
 app.use('/api/estadisticas', estadisticasRoutes);
 app.use('/api/top-clientes', topClientesRoutes);
 app.use('/api/contenido', contenidoRoutes);
+app.use('/api/proveedores', proveedorRoutes);
+
 
 // Ruta de prueba
 app.get('/', (req, res) => {
