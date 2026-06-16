@@ -14,5 +14,5 @@ steps:
   displayName: 'Instalar dependencias'
 
 - script: |
-    "C:\nvm4w\nodejs\npm.cmd" test -- --testPathPattern="Auth.service|Client.service|Producto.service|Pedido.service"
+    "C:\nvm4w\nodejs\npm.cmd" test -- --testPathPatterns="Auth.service" "Client.service" "Producto.service" "Pedido.service"
   displayName: 'Correr tests'
