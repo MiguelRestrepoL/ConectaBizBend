@@ -9,7 +9,7 @@ import './Audit.model.js'
 import './Cupon.model.js'
 import './Promocion.model.js'
 import './Contenido.model.js'
-import './Proovedor.model.js'
+import './Proveedor.model.js'
  
 // Importar los modelos
 import { User } from './User.model.js';
