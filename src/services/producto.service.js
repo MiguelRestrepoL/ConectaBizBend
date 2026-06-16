@@ -9,7 +9,8 @@ import {
   findProductosStockBajo,
 } from '../repository/producto.repository.js';
 import { findProveedorById } from '../repository/proveedor.repository.js';
-import { logAudit } from '../repository/audit.repository.js';
+import { logAudit } from './audit.service.js';
+
  
 /* ── Helper: valida que el proveedor exista y pertenezca al usuario ── */
 const validarProveedor = async (proveedorId, userId) => {
