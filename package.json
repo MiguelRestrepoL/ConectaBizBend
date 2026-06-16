@@ -9,11 +9,10 @@
   "start": "node src/index.js",
   "reset-db": "node src/index.js",
   "clean-tokens": "node src/scripts/cleanExpiredTokens.js",
-  "test": "node --experimental-vm-modules node_modules/.bin/jest --testTimeout=10000"
+  "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --testTimeout=10000"
 },
-  "jest": {
+"jest": {
   "transform": {},
-  "extensionsToTreatAsEsm": [".js"],
   "testEnvironment": "node",
   "testMatch": ["**/tests/**/*.test.js"]
 },
