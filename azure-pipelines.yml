@@ -14,5 +14,16 @@ steps:
   displayName: 'Instalar dependencias'
 
 - script: |
-    "C:\nvm4w\nodejs\npm.cmd" test -- --testPathPatterns="Auth.service" "Client.service" "Producto.service" "Pedido.service"
+    "C:\nvm4w\nodejs\npm.cmd" test -- --testPathPatterns="Auth.service" "Client.service" "Producto.service" "Pedido.service" --reporters=default --reporters=jest-junit
   displayName: 'Correr tests'
+  env:
+    JEST_JUNIT_OUTPUT_DIR: $(Build.ArtifactStagingDirectory)
+    JEST_JUNIT_OUTPUT_NAME: test-results.xml
+
+- task: PublishTestResults@2
+  displayName: 'Publicar informe de tests'
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '$(Build.ArtifactStagingDirectory)/test-results.xml'
+    testRunTitle: 'ConectaBiz Test Results'
+  condition: always()
