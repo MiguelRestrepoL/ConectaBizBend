@@ -7,7 +7,7 @@ import {
 } from '../repository/estadisticas.repository.js';
  
 export const getEstadisticasService = async (userId, { fechaInicio, fechaFin } = {}) => {
-  // Calcular período anterior para comparativas (mismo rango de días, hacia atrás)
+  // Calcular período anterior para comparativas (mismo rango de días, hacia atrás).
   let fechaInicioAnterior, fechaFinAnterior;
   if (fechaInicio && fechaFin) {
     const dias = Math.ceil(
